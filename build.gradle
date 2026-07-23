@@ -1,0 +1,61 @@
+plugins {
+	id 'fabric-loom' version "${loom_version}"
+	id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	// Loom automatically adds the Mojang/Fabric repos needed to fetch Minecraft itself.
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = "Modrinth"
+				url = "https://api.modrinth.com/maven"
+			}
+		}
+		filter {
+			includeGroup "maven.modrinth"
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+
+	// Compile-only: lets us implement ModMenu's config-screen API without forcing players
+	// who don't have ModMenu installed to need it. The /resourcepackplus command always
+	// works regardless of whether ModMenu is present. Fetched via Modrinth's maven, which
+	// is far more reliable than smaller independent mod maven hosts.
+	modCompileOnly "${project.modmenu_modrinth_coordinate}"
+
+	// Official Mojang mappings (not Yarn) — future Minecraft versions (26.x+) use these
+	// natively once obfuscation is removed, so staying on this scheme now means far less
+	// renaming work when we port later.
+	mappings loom.officialMojangMappings()
+
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+processResources {
+	inputs.property "version", project.version
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
