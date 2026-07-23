@@ -71,7 +71,7 @@ public abstract class ResourcePackPushMixin {
             ResourcePackPlusClient.LOGGER.error(msg);
         }
         if (client.player != null) {
-            client.player.displayClientMessage(net.minecraft.network.chat.Component.literal(msg), false);
+            client.player.sendSystemMessage(net.minecraft.network.chat.Component.literal(msg));
         }
     }
 
@@ -165,7 +165,7 @@ public abstract class ResourcePackPushMixin {
 
         // ASK_EACH_TIME (the default) or a brand-new server: prompt on the FIRST join, then remember
         // whatever the player picks so we don't ask again.
-        client.execute(() -> client.setScreen(new PackPromptScreen(
+        client.execute(() -> client.setScreenAndShow(new PackPromptScreen(
                 serverKey, url, hash, required,
                 () -> { // "Download & apply" — download + apply, and remember "Accept" for next time
                     diagSend(serverKey, packId, ServerboundResourcePackPacket.Action.ACCEPTED);

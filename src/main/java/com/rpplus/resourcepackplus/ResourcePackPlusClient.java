@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
 /**
  * Client entrypoint. Kept intentionally thin — real logic lives in the
@@ -40,7 +40,9 @@ public class ResourcePackPlusClient implements ClientModInitializer {
 
     private static int openConfig(com.mojang.brigadier.context.CommandContext<net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> context) {
         Minecraft client = Minecraft.getInstance();
-        client.execute(() -> client.setScreen(new ConfigScreen(client.screen)));
+        // Minecraft no longer exposes a "current screen" accessor to pass as a parent — a
+        // command invocation never has a meaningful screen to return to anyway.
+        client.execute(() -> client.setScreenAndShow(new ConfigScreen(null)));
         return Command.SINGLE_SUCCESS;
     }
 
@@ -57,7 +59,7 @@ public class ResourcePackPlusClient implements ClientModInitializer {
         PackDownloadManager.convertAndApply(client, serverKey,
                 status -> client.execute(() -> {
                     if (client.player != null) {
-                        client.player.displayClientMessage(Component.literal("[Server Packs+] " + status), false);
+                        client.player.sendSystemMessage(Component.literal("[Server Packs+] " + status));
                     } else {
                         LOGGER.info("[Server Packs+] {}", status);
                     }
@@ -67,8 +69,8 @@ public class ResourcePackPlusClient implements ClientModInitializer {
                 fraction -> client.execute(() -> {
                     if (client.player != null) {
                         int pct = (int) Math.round(fraction * 100);
-                        client.player.displayClientMessage(
-                                Component.literal("§b[Server Packs+]§r Extracting pack… " + pct + "%"), true);
+                        client.player.sendOverlayMessage(
+                                Component.literal("§b[Server Packs+]§r Extracting pack… " + pct + "%"));
                     }
                 }),
                 success -> { /* final status already reported through the status callback above */ });

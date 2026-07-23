@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 }
 
@@ -28,19 +28,21 @@ repositories {
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
-	// Compile-only: lets us implement ModMenu's config-screen API without forcing players
-	// who don't have ModMenu installed to need it. The /resourcepackplus command always
-	// works regardless of whether ModMenu is present. Fetched via Modrinth's maven, which
-	// is far more reliable than smaller independent mod maven hosts.
-	modCompileOnly "${project.modmenu_modrinth_coordinate}"
+	// Compile-only + runtime-only (not `implementation`): lets us implement ModMenu's
+	// config-screen API and test it in the dev client via runClient, without bundling ModMenu
+	// into the shipped jar or forcing players who don't have it to need it. The
+	// /resourcepackplus command always works regardless of whether ModMenu is present. Fetched
+	// via Modrinth's maven, which is far more reliable than smaller independent mod maven hosts.
+	compileOnly "${project.modmenu_modrinth_coordinate}"
+	runtimeOnly "${project.modmenu_modrinth_coordinate}"
 
-	// Official Mojang mappings (not Yarn) — future Minecraft versions (26.x+) use these
-	// natively once obfuscation is removed, so staying on this scheme now means far less
-	// renaming work when we port later.
-	mappings loom.officialMojangMappings()
+	// No `mappings` block: starting with 26.x, Minecraft ships unobfuscated, so there's no
+	// separate Mojang mapping file to fetch — Loom uses the jar's own names directly. Since
+	// mods on this version are unobfuscated too, the mod*/plain dependency distinction (which
+	// existed to trigger remapping) no longer applies — plain implementation/compileOnly work.
 
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 }
 
 processResources {
@@ -51,11 +53,11 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = 25
 }
 
 java {
 	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
 }

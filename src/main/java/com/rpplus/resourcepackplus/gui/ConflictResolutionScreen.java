@@ -1,7 +1,7 @@
 package com.rpplus.resourcepackplus.gui;
 
 import com.rpplus.resourcepackplus.core.PackDownloadManager;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -106,14 +106,14 @@ public class ConflictResolutionScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(parent);
+        this.minecraft.setScreenAndShow(parent);
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 12, 0xFFFFFF);
-        guiGraphics.drawCenteredString(this.font,
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+        guiGraphics.centeredText(this.font, this.title, this.width / 2, 12, 0xFFFFFF);
+        guiGraphics.centeredText(this.font,
                 Component.literal(conflicts.size() + " texture(s) changed on the server since your last download."),
                 this.width / 2, 26, 0xA0A0A0);
 
@@ -122,7 +122,7 @@ public class ConflictResolutionScreen extends Screen {
         int end = Math.min(start + ROWS_PER_PAGE, conflicts.size());
         for (int i = start; i < end; i++) {
             int rowY = listTop + (i - start) * ROW_HEIGHT;
-            guiGraphics.drawString(this.font, conflicts.get(i), 20, rowY + 6, 0xE0E0E0);
+            guiGraphics.text(this.font, conflicts.get(i), 20, rowY + 6, 0xE0E0E0);
         }
     }
 

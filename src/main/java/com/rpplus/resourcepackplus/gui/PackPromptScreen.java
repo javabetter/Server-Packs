@@ -1,6 +1,6 @@
 package com.rpplus.resourcepackplus.gui;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -48,14 +48,14 @@ public class PackPromptScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 2 - 60, 0xFFFFFF);
-        guiGraphics.drawCenteredString(this.font,
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+        guiGraphics.centeredText(this.font, this.title, this.width / 2, this.height / 2 - 60, 0xFFFFFF);
+        guiGraphics.centeredText(this.font,
                 Component.literal("This server offers a custom resource pack."),
                 this.width / 2, this.height / 2 - 45, 0xA0A0A0);
         if (required) {
-            guiGraphics.drawCenteredString(this.font,
+            guiGraphics.centeredText(this.font,
                     Component.literal("The server marked this pack as required."),
                     this.width / 2, this.height / 2 - 33, 0xFF8080);
         }

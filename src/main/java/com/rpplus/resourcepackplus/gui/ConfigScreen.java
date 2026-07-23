@@ -6,7 +6,7 @@ import com.rpplus.resourcepackplus.core.PackPreferences;
 import com.rpplus.resourcepackplus.core.ResourcePackInstaller;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.FaviconTexture;
@@ -327,8 +327,8 @@ public class ConfigScreen extends Screen {
         IconButton withColor(int rgb) { this.color = rgb; return this; }
         IconButton nudge(float dx, float dy) { this.nudgeX = dx; this.nudgeY = dy; return this; }
         @Override
-        protected void renderContents(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-            renderDefaultSprite(g);
+        protected void extractContents(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+            extractDefaultSprite(g);
             net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
             int c = this.active ? color : 0xFF7A7A7A;
             var pose = g.pose();
@@ -339,11 +339,11 @@ public class ConfigScreen extends Screen {
             pose.translate(this.getX() + this.getWidth() / 2f, this.getY() + this.getHeight() / 2f);
             pose.scale(scale, scale);
             pose.translate(-font.width(glyph) / 2f + nudgeX, -(font.lineHeight - 1) / 2f + nudgeY);
-            g.drawString(font, glyph, 0, 0, c, false);
+            g.text(font, glyph, 0, 0, c, false);
             if (heavy) {
                 // Redraw shifted a fraction of a pixel to thicken the strokes.
                 pose.translate(0.55f, 0f);
-                g.drawString(font, glyph, 0, 0, c, false);
+                g.text(font, glyph, 0, 0, c, false);
             }
             pose.popMatrix();
         }
@@ -374,7 +374,7 @@ public class ConfigScreen extends Screen {
                         return;
                     }
                     if (!result.conflicts.isEmpty()) {
-                        this.minecraft.setScreen(new ConflictResolutionScreen(
+                        this.minecraft.setScreenAndShow(new ConflictResolutionScreen(
                                 this, result.incomingTempDir, result.packFolder, result.conflicts,
                                 () -> {
                                     PackDownloadManager.cleanupTempDir(result.incomingTempDir);
@@ -415,7 +415,7 @@ public class ConfigScreen extends Screen {
      *  renders (and blurs) the background once per frame; calling renderBackground again triggers a
      *  second blur, which the engine forbids ("Can only blur once per frame"). Instead we lay our
      *  own near-opaque gradient scrim over whatever's already there. */
-    private void drawBackgroundAndCards(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    private void drawBackgroundAndCards(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         // Dark gradient scrim across the whole screen for contrast/eye-candy (no blur).
         g.fillGradient(0, 0, this.width, this.height, 0xE8121A24, 0xF2060A10);
 
@@ -565,7 +565,7 @@ public class ConfigScreen extends Screen {
         return super.mouseReleased(event);
     }
 
-    private void drawCard(GuiGraphics g, String serverKey, PackPreferences.ServerEntry entry,
+    private void drawCard(GuiGraphicsExtractor g, String serverKey, PackPreferences.ServerEntry entry,
                           int cardX, int cardW, int cardTop, boolean hovered, boolean dragging) {
         int x2 = cardX + cardW;
         int y2 = cardTop + CARD_H;
@@ -599,9 +599,9 @@ public class ConfigScreen extends Screen {
         int tx = cardX + 62;
         ServerData sd = serverDataByKey.get(serverKey);
         String name = (sd != null && sd.name != null && !sd.name.isBlank()) ? sd.name : serverKey;
-        g.drawString(this.font, name, tx, cardTop + 6, 0xFFFFFFFF);
+        g.text(this.font, name, tx, cardTop + 6, 0xFFFFFFFF);
         if (!name.equals(serverKey)) {
-            g.drawString(this.font, serverKey, tx, cardTop + 18, 0xFF8AA0B4);
+            g.text(this.font, serverKey, tx, cardTop + 18, 0xFF8AA0B4);
         }
 
         // Status pills. Order: ENABLED, CONVERTED, CACHED (keep-applied).
@@ -623,19 +623,19 @@ public class ConfigScreen extends Screen {
             px = drawPill(g, px, py, "NOT CACHED", 0xFF3A4048, 0xFFB8C0C8);
         }
         if (entry.lastUpdatedMillis > 0) {
-            g.drawString(this.font, "updated " + DATE_FORMAT.format(new Date(entry.lastUpdatedMillis)),
+            g.text(this.font, "updated " + DATE_FORMAT.format(new Date(entry.lastUpdatedMillis)),
                     px + 4, py + 2, 0xFF8AA0B4);
         }
     }
 
     /** Draws a small rounded-look status pill and returns the x just past its right edge. */
-    private int drawPill(GuiGraphics g, int x, int y, String text, int bg, int fg) {
+    private int drawPill(GuiGraphicsExtractor g, int x, int y, String text, int bg, int fg) {
         int w = this.font.width(text) + 8;
         int h = 12;
         // Fake rounded corners by insetting the top/bottom edge rows by 1px.
         g.fill(x + 1, y, x + w - 1, y + h, bg);
         g.fill(x, y + 1, x + w, y + h - 1, bg);
-        g.drawString(this.font, text, x + 4, y + 2, fg);
+        g.text(this.font, text, x + 4, y + 2, fg);
         return x + w + 4;
     }
 
@@ -664,23 +664,23 @@ public class ConfigScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         // Advance the smooth-scroll easing and reposition/cull card buttons for this frame BEFORE
         // anything draws, so the cards and their buttons move together.
         updateScroll();
         layoutCardWidgets();
 
-        drawBackgroundAndCards(g, mouseX, mouseY, partialTick); // background + cards, behind widgets
-        super.render(g, mouseX, mouseY, partialTick);           // widgets (buttons) on top
+        drawBackgroundAndCards(g, mouseX, mouseY, partialTick);      // background + cards, behind widgets
+        super.extractRenderState(g, mouseX, mouseY, partialTick);    // widgets (buttons) on top
 
         // Header: mod icon + title, drawn on top.
         int titleW = this.font.width(this.title);
         int hx = this.width / 2 - (titleW + 22) / 2;
         g.blit(RenderPipelines.GUI_TEXTURED, PLACEHOLDER_ICON, hx, 4, 0.0F, 0.0F, 18, 18, 18, 18);
-        g.drawString(this.font, this.title, hx + 22, 9, 0xFFFFFFFF);
+        g.text(this.font, this.title, hx + 22, 9, 0xFFFFFFFF);
 
         if (serverKeys.isEmpty()) {
-            g.drawCenteredString(this.font,
+            g.centeredText(this.font,
                     Component.literal("No servers remembered yet — join a server with a resource pack to start."),
                     this.width / 2, this.height / 2 - 6, 0xFFA0A0A0);
         }
@@ -688,7 +688,7 @@ public class ConfigScreen extends Screen {
         // Status line + progress bar live in the reserved footer band (below the card viewport,
         // above the Forget All / Done buttons) so they never overlap the bottom card.
         if (statusMessage != null) {
-            g.drawCenteredString(this.font, statusMessage, this.width / 2, this.height - 52, 0xFFFFD060);
+            g.centeredText(this.font, statusMessage, this.width / 2, this.height - 52, 0xFFFFD060);
         }
 
         // Live extraction progress bar (only while a conversion is running).
@@ -705,7 +705,7 @@ public class ConfigScreen extends Screen {
                 g.fill(bx, by, bx + fillW, by + barH, 0xFF4CC3FF);            // filled portion
             }
             String pct = (int) Math.round(clamped * 100) + "%";
-            g.drawString(this.font, pct, bx + barW + 6, by - 1, 0xFFBFE6FF);
+            g.text(this.font, pct, bx + barW + 6, by - 1, 0xFFBFE6FF);
         }
     }
 
@@ -739,7 +739,7 @@ public class ConfigScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(parent);
+        this.minecraft.setScreenAndShow(parent);
     }
 
     // ---------- option label helpers ----------
