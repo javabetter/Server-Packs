@@ -61,3 +61,16 @@ java {
 	sourceCompatibility = JavaVersion.VERSION_25
 	targetCompatibility = JavaVersion.VERSION_25
 }
+
+// Release jar naming: "ServerPacks+ v<mod_version> <minecraft_version>.jar" instead of Gradle's
+// default "<archivesBaseName>-<version>.jar", so downloaded files are self-explanatory about
+// which Minecraft version they target. Matches whichever archive task actually produces the
+// final build/libs output, whether or not remapping is involved.
+def releaseFileBaseName = "ServerPacks+ v${project.mod_version} ${project.minecraft_version}"
+tasks.withType(AbstractArchiveTask).configureEach { task ->
+	if (task.name == "jar" || task.name == "remapJar") {
+		task.archiveFileName.set("${releaseFileBaseName}.jar")
+	} else if (task.name == "sourcesJar" || task.name == "remapSourcesJar") {
+		task.archiveFileName.set("${releaseFileBaseName}-sources.jar")
+	}
+}
