@@ -53,15 +53,6 @@ every time you rejoin" behavior.
   change any server's settings, cache/uncache its pack, convert it to an
   editable local pack, update it, revert it, or forget it entirely.
 
-## Building from source
-
-1. Install **Java 21** (JDK) — [Temurin 21](https://adoptium.net) works well.
-2. Install **IntelliJ IDEA** (Community Edition is fine) with the
-   **Minecraft Development** plugin, or use the command line.
-3. Open this folder in IntelliJ and let Gradle sync (first sync downloads
-   Minecraft's libraries and decompiles the game — expect several minutes).
-4. Run the **"Minecraft Client"** run configuration, or build a jar with:
-
 ```
 $env:JAVA_HOME = "<path to a JDK 21 install>"
 .\gradlew.bat build
